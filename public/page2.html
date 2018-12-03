@@ -34,6 +34,12 @@
           $('#messages').append($('<li>').text(msg));
           window.scrollTo(0, document.body.scrollHeight);
         });
+        socket.on('pageChange', function(msg){
+          console.log("Page change");
+          console.log(msg);
+          console.log(window.location.host + `/${msg}`);
+          window.location.reload();
+        });
       });
     </script>
   </body>

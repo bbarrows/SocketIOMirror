@@ -8,19 +8,24 @@ const port = process.env.PORT || 3000;
 
 let pageNumber = 1;
 
-app.use(express.static('public'))
+// app.use(express.static('public'))
 
 app.get('/', function(req, res){
   //console.log(req);
-  res.sendFile(__dirname + `/page${pageNumber}.html`);
+  res.sendFile(__dirname + `/public/page${pageNumber}.html`);
 });
 
 io.on('connection', function(socket){
   socket.on('chat message', function(msg){
     io.emit('chat message', msg);
     io.emit('pageChange', 'page2.html');
-    pageNumber = 2;
+    pageNumber = 2; 
   });
+
+  setTimeout(function () {
+    pageNumber = 2;
+    io.emit('pageChange', 'reloadPage');
+  }, 4000);
 });
 
 http.listen(port, function(){

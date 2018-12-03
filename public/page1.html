@@ -37,8 +37,8 @@
         socket.on('pageChange', function(msg){
           console.log("Page change");
           console.log(msg);
-          window.location = window.location.host + `/${msg}`;
           console.log(window.location.host + `/${msg}`);
+          window.location.reload();
         });
 
       });
