@@ -1,5 +1,4 @@
-const leapjs      = require('leapjs');
-const controller  = new leapjs.Controller({enableGestures: true});
+const Cylon = require("cylon");
 
 const express = require('express');
 const app = express();
@@ -9,7 +8,17 @@ const io = require('socket.io')(http);
 const port = process.env.PORT || 3000;
 
 let pageNumber = 1;
+let socketIOConn = null;
 
+function updatePage(page) {
+    if (socketIOConn) {
+        console.log('Sending SocketIO msg to update page');
+        pageNumber = page; 
+        io.emit('pageChange', 'reloadPage');        
+    } else {
+        console.log('No SocketIO connection to update page with.');
+    }
+}
 
 // To serve static content:
 // https://expressjs.com/en/starter/static-files.html
@@ -28,10 +37,14 @@ io.on('connection', function(socket){
     pageNumber = 2; 
   });
 
+  /*
   setTimeout(function () {
     pageNumber = 2;
     io.emit('pageChange', 'reloadPage');
   }, 4000);
+  */
+  socketIOConn = io;
+
 });
 
 http.listen(port, function(){
@@ -45,12 +58,27 @@ http.listen(port, function(){
 
 console.log('Setting up Leap Motion');
 
-controller.on('deviceFrame', function(frame) {
+Cylon.robot({
+  connections: {
+    leapmotion: { adaptor: 'leapmotion' }
+  },
+
+  devices: {
+    leapmotion: { driver: 'leapmotion' }
+  },
+
+
+  work: function(my) {
+    my.leapmotion.on("frame", function(frame) {
+    // console.log("frame")
+
+
   // loop through available gestures
   for(var i = 0; i < frame.gestures.length; i++){
     var gesture = frame.gestures[i];
     var type    = gesture.type;          
-
+    // console.log(type);
+      
     switch( type ){
 
       case "circle":
@@ -62,6 +90,12 @@ controller.on('deviceFrame', function(frame) {
       case "swipe":
         if (gesture.state == "stop") {
           console.log('swipe');
+          if(pageNumber ==1) {
+            updatePage(2);
+          } else {
+            updatePage(1);
+          }
+          
         }
         break;
 
@@ -79,8 +113,10 @@ controller.on('deviceFrame', function(frame) {
 
       }
     }
-});
 
-controller.connect();
+
+    });
+  }
+}).start();
 
 console.log('Connected to Leap Motion');
